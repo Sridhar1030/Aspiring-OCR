@@ -8,6 +8,7 @@ import pytesseract
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 import uvicorn
 from fastapi.security.api_key import APIKeyHeader
+from starlette.middleware.cors import CORSMiddleware  # Add this import
 
 app = FastAPI()
 load_dotenv()
@@ -45,6 +46,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Define a function to extract text from a single page of the PDF
 def extract_text_from_page(page):
     # Extract text from a specific page
