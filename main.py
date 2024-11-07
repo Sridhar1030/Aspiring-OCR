@@ -33,7 +33,18 @@ def get_api_key(api_key: str):
             detail="Could not validate API key",
         )
 
+# CORS setup
+origins = [
+    "*"
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Define a function to extract text from a single page of the PDF
 def extract_text_from_page(page):
     # Extract text from a specific page
