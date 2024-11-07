@@ -137,5 +137,10 @@ async def extract(file : UploadFile = File(...), api_key: str=Header(..., alias=
     else:
         return {'message' : 'NO CODES FOUND'}
 
+# Test GET route
+@app.get("/test")
+async def test_route():
+    return {"message": "API is working properly!"}
+
 if __name__=='__main__' :
     uvicorn.run(app, host = '127.0.0.1', port = 8000)
