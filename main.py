@@ -1,21 +1,19 @@
+import easyocr
 import re
 import fitz
 from fastapi.responses import JSONResponse
 import os
 from dotenv import load_dotenv
 from PIL import Image
-import pytesseract
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 import uvicorn
 from fastapi.security.api_key import APIKeyHeader
-from starlette.middleware.cors import CORSMiddleware  # Add this import
 
 app = FastAPI()
 load_dotenv()
 
-# Setting up Tesseract
-# pytesseract.pytesseract.tesseract_cmd = os.getenv('Tesseract')
-pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+reader = easyocr.Reader(['en'])
+
 
 api_keys = os.getenv('API_KEYS') 
 # print(api_keys)
@@ -34,18 +32,6 @@ def get_api_key(api_key: str):
             detail="Could not validate API key",
         )
 
-# CORS setup
-origins = [
-    "*"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Define a function to extract text from a single page of the PDF
 def extract_text_from_page(page):
@@ -66,7 +52,11 @@ def extract_codes_from_text(text):
 def extract_codes_from_image(page):
     pix = page.get_pixmap()  
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    text = pytesseract.image_to_string(img)  
+    img.thumbnail((1000, 1000))
+    img.save("temp_image.png")
+    result = reader.readtext("temp_image.png", detail=0)
+    text = " ".join(result) 
+    os.remove("temp_image.png") 
     return text
 
 
@@ -149,11 +139,6 @@ async def extract(file : UploadFile = File(...), api_key: str=Header(..., alias=
         return JSONResponse(content={"extracted_data": codes_with_page_no})
     else:
         return {'message' : 'NO CODES FOUND'}
-
-# Test GET route
-@app.get("/test")
-async def test_route():
-    return {"message": "API is working properly!"}
 
 if __name__=='__main__' :
     uvicorn.run(app, host = '127.0.0.1', port = 8000)
